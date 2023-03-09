@@ -1,78 +1,63 @@
-from random import choice
 from termcolor import colored, cprint
-import os
-clear =  lambda: os.system('cls||clear')
+import os; clear = lambda: os.system("cls||clear")
 
-def formatted(guess: str, word: str):
-    guess = guess.upper()
-    word  = word.upper()
-    formatted = ""
-    for letter, true_letter in zip(guess, word):
-        if letter == true_letter:
-            background = "on_green"
-        elif letter in word:
-            background = "on_yellow"
+class Wordle:
+    def __init__(self, word: str, chances=None) -> None:
+        if chances is None:
+            self.chances = len(word)
         else:
-            background = "on_dark_grey"
-        letter = " " + letter + " "
-        formatted += colored(text=letter, color='white', on_color=background, attrs=['bold'])
-    return formatted
+            self.chances = chances
+        self.word = word.upper()
+        self.history = []
 
-def display(history, word, chances):
-    print()
-    for guess in history:
-        print(formatted(guess, word))
-    empty_words = chances - len(history)
-    if empty_words > 0:
-        for _ in range(empty_words):
-            print(formatted('-' * len(word), word))
-    print()
+    def __str__(self) -> str:
+        colored_history = []
+        for guess in self.history:
+            colored_guess = ""
+            for letter, true_letter in zip(guess, self.word):
+                if letter == true_letter:
+                    background = "on_green"
+                elif letter in self.word:
+                    background = "on_yellow"
+                else:
+                    background = "on_dark_grey"
+                letter = " " + letter + " "
+                colored_guess += colored(letter, "white", background, attrs=["bold"])
+            colored_history.append(colored_guess)
+        empty_guesses = self.chances - len(colored_history)
+        if empty_guesses > 0:
+            empty_line = colored(" - " * len(self.word), "white", "on_dark_grey", attrs=["bold"])
+            for _ in range(empty_guesses):
+                colored_history.append(empty_line)
+        return "\n" + ("\n".join(colored_history)) + "\n"
 
-
-def wordguess(word: str, chances: int):
-    clear()
-    history = []
-    while True:
-        display(history, word, chances)
-        guess = input(f'> ')
-        while len(guess) != len(word):
+    def play(self) -> None:
+        while True:
             clear()
-            cprint(f"Word must have", "red", attrs=['bold'], end=' ')
-            cprint(f"{len(word)}", 'yellow', attrs=['bold'], end=' ')
-            cprint(f"letters!", "red", attrs=['bold'])
-            display(history, word, chances)
-            guess = input(f'> ')
-        history.append(guess)
-        clear()
-        if guess == word:
-            match len(history):
-                case 1:
-                    message = "Now that's what i'm talking about!"
-                case 2:
-                    message = "Awesome!"
-                case 3:
-                    message = "Fantastic!"
-                case 4:
-                    message = "Nice!"
-                case 5:
-                    message = "Phew!"
-            cprint(message, "green", attrs=["bold"])
-            display(history, word, chances)
-            break
-        if len(history) == chances: 
-            cprint(f"Game over! Secret word:", color="red", attrs=["bold"], end=" ")
-            cprint(word.title(), "yellow", attrs=["bold", "underline"])
-            display(history, word, chances)
-            break
+            print(self)
+            guess = input(f"> ").upper()
+            while len(guess) != len(self.word):
+                clear()
+                cprint(f"Guess must have", "yellow", end=" ")
+                cprint(f"{len(self.word)}", "blue", attrs=["bold", "underline"], end=" ")
+                cprint(f"letters!", "yellow")
+                print(self)
+                guess = input(f"> ").upper()
+            self.history.append(guess)
+            if guess == self.word:
+                clear()
+                cprint("Awesome!", "green", attrs=["bold"])
+                print(self)
+                break
+            if len(self.history) == self.chances:
+                clear()
+                cprint(f"Game over! Secret word:", color="yellow", end=" ")
+                cprint(self.word.title(), "blue", attrs=["bold", "underline"])
+                print(self)
+                break
+
 
 if __name__ == "__main__":
     from random import choice
-    words = ['senso', 'nobre', 'sutil', 'poder', 'moral', 'casal', 'ideia']
-    play_again = True
-    while play_again:
-        wordguess(choice(words), 5)
-        again = input("[Y/N] Play again? ").upper()
-        if again in ("N", "NO"):
-            play_again = False
-        else:
-            play_again = True
+    words = ["young", "study", "table", "local", "money", "heart"]
+    Wordle(word=choice(words)).play()
